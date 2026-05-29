@@ -11,7 +11,7 @@ from ..utils.arrays import ensure_shape
 #     from .magnetic_symmetry import MSG
 
 # Internal
-from ..databases import atom_data, color_data
+from ..databases import atom_data
 
 # config constants
 config = dict(MAX_DENOMINATOR = 1000)

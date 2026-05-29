@@ -7,7 +7,6 @@ from copy import deepcopy
 
 from ..crystal.atom import Atom
 from ..crystal.crystal import Crystal
-from ..databases import color_data
 
 import logging
 import logging.config
@@ -29,15 +28,6 @@ def _format_bbox(boundaries: Union[int, list[int]]):
 
     return np.sort(bbox, axis=1)
 
-def find_matching_label_color(label: str, label_colors: dict[str, Any]):
-    """Find a color for a label by scanning provided prefix→color_name dict."""
-    color_ret = color_data['Gray'].RGB
-    for prefix, color_name in label_colors.items():
-        if label.startswith(prefix):
-            color_ret = color_data[color_name].RGB
-            break
-
-    return color_ret
 
 #######################################################################################################
 
@@ -202,7 +192,7 @@ class SupercellPlotter(ABC):
             self.logger.error(traceback.format_exc())
 
         # Cell edges
-        colors = np.array([color_data['Black'].RGB for _ in edges])
+        colors = np.array([[1,1,1] for _ in edges]) # black
         edges = np.array([self.crystal.uvw2xyz(np.array(edge))
                           for edge in edges])
         try:
@@ -218,11 +208,7 @@ class SupercellPlotter(ABC):
         ])
         main_edges = np.array([self.crystal.uvw2xyz(np.array(edge))
                                for edge in main_edges])
-        colors = np.array([
-            color_data['Red'].RGB,
-            color_data['Green'].RGB,
-            color_data['Blue'].RGB
-            ])
+        colors = np.eye(3)  # list of R G B
         try:
             self.plot_lines(main_edges, colors, width=4)
         except Exception as e:

@@ -61,7 +61,7 @@ Full testing
 
 ```python
 # run pytest
-uv run pytest tests/
+uv run pytest
  
 # generate htmlcov/ report, open htmlcov/index.html
 uv run pytest tests/ --cov=bragg --cov-report=html
