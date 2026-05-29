@@ -1,0 +1,24 @@
+[project]
+name = "bragg"
+version = "0.1.0"
+description = "Crystallography in python"
+authors = [
+    {name = 'Michal Stekiel', email = 'michal.stekiel@gmail.com'},
+    ]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    'numpy>=1.23',
+]
+
+
+[dependency-groups]
+vis = [
+    'matplotlib>=3.5.2',
+]
+dev = [
+    {include-group = "vis"},
+    'pytest>=9.0.2',
+    "sphinx>=5.0.2",
+    "spglib>=2.0",
+]
