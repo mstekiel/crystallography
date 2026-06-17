@@ -205,7 +205,7 @@ class cSymOp(SymOp):
 class SG(Group):
     def __init__(self, generators: list['cSymOp'], name: str='SG'):
         
-        super().__init__(generators=generators, name=name)
+        super().__init__(base=generators, name=name)
 
     ##############################################################################
     # Constructors

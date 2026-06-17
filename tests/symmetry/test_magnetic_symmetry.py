@@ -33,7 +33,7 @@ def test_mSymOp_multiplication():
     assert g_m_100*g_m_100 == g_1
 
 def test_MSG_construction():
-    P4pom = MSG.from_xyz_strings(generators=[
+    P4pom = MSG.from_xyz_strings(base=[
         '-y,x,z,-1',
         '-x,-y,-z,+1'
     ])
@@ -51,7 +51,7 @@ def test_MSG_construction():
     assert set(mSymOp.from_string(s) for s in P4pom_bilbao) == set(g for g in P4pom)
 
     # This is non-standard setting
-    I_P4_1p2p2 = MSG.from_xyz_strings(generators=[
+    I_P4_1p2p2 = MSG.from_xyz_strings(base=[
         'x+1/2, -y, -z+3/4, +1',
         '-y+1/2, x, z+3/4, +1',
         'x+1/2, y+1/2, z+1/2, -1'
@@ -89,7 +89,7 @@ def test_MSG_construction():
 
 @pytest.mark.skip(reason="Not implemented yet")
 def test_subgroups():
-    Imm3 = MSG.from_xyz_strings(generators=[
+    Imm3 = MSG.from_xyz_strings(base=[
         'z, x, y, +1',    # 3_111
         'x+1/2, y+1/2, z+1/2, +1', # I centering
         '-x, -y, z, +1',    # 2_110
@@ -102,7 +102,7 @@ def test_subgroups():
     assert sorted(subgroups_order) == sorted([Gsub.order for Gsub in subgroups])
 
 def test_orbits():
-    P4_32_12 = MSG.from_xyz_strings(generators=[
+    P4_32_12 = MSG.from_xyz_strings(base=[
         '-y+1/2, x+1/2, z+3/4, +1',
         'x+1/2, -y+1/2, -z+1/4, +1',
     ])
@@ -121,7 +121,7 @@ def test_orbits():
 
 
     ### with generators
-    I = MSG.from_xyz_strings(generators=['x+1/2, y+1/2, z+1/2, +1'])
+    I = MSG.from_xyz_strings(base=['x+1/2, y+1/2, z+1/2, +1'])
     rs, gs = I.get_orbit(position=[0,0,0], return_generators=True)
 
     for r,g in zip(rs, gs):
@@ -131,7 +131,7 @@ def test_orbits():
             assert g == mSymOp.from_string('x+1/2, y+1/2, z+1/2, +1')
 
     ### graphite, to check floating point accuracy with 1/3
-    P_194 = MSG.from_xyz_strings(generators=[
+    P_194 = MSG.from_xyz_strings(base=[
         '-y,x-y,z, +1',
         '-x,-y,z+1/2, +1',
         'y,x,-z, +1',
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     ### Quick tests
     import time
     t_start = time.time()
-    P = MSG.from_xyz_strings(generators=[
+    P = MSG.from_xyz_strings(base=[
         '-y, x, z, +1', # 4_001
         # 'z, x, y, +1',    # 3_111
         # 'x+1/2, y+1/2, z+1/2, +1', # I centering

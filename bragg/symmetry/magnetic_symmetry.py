@@ -2,11 +2,8 @@ from fractions import Fraction
 import numpy as np
 import logging
 
-from copy import deepcopy
-from itertools import chain, combinations
-
 from .group import SymOp, Group
-
+from ..utils.arrays import ensure_shape
 
 from typing import Any, Callable, TypeVar, Union, TYPE_CHECKING
 if TYPE_CHECKING:
@@ -65,6 +62,8 @@ class mSymOp(SymOp):
 
     ##############################################################################
     # Constructors
+
+    @ensure_shape(matrix=(3,3), translation=(3,))
     def __init__(self,
                  matrix: np.ndarray[int],
                  translation: np.ndarray[Fraction],
@@ -347,7 +346,8 @@ class mSymOp(SymOp):
             time_reversal = self._time_reversal
         )
 
-    def transform_position(self, position: np.ndarray[Any], to_UC: bool=False) -> np.ndarray[Any]:
+    @ensure_shape(position=(3,))
+    def transform_position(self, position: np.ndarray[Fraction], to_UC: bool=False) -> np.ndarray[Fraction]:
         '''Transform the `position` in crystal coordinates according to `mSymOp`.
         
         Parameters
@@ -363,7 +363,8 @@ class mSymOp(SymOp):
 
         return r_new
     
-    def transform_polar_vec(self, vector: np.ndarray) -> np.ndarray[float]:
+    @ensure_shape(vector=(3,))
+    def transform_polar_vec(self, vector: np.ndarray[Fraction]) -> np.ndarray[Fraction]:
         '''Transform the `vector` of polar character (electric dipole) according to `mSymOp`.
         
         Notes
@@ -372,6 +373,7 @@ class mSymOp(SymOp):
         '''
         return self.matrix @ vector
     
+    @ensure_shape(vector=(3,))
     def transform_axial_vec(self, vector: np.ndarray) -> np.ndarray[float]:
         '''Transform the `vector` of axial character (magnetic dipole) according to `mSymOp`.
         
@@ -413,7 +415,7 @@ class MSG(Group[mSymOp]):
     ##############################################################################
     # Constructors
     @classmethod
-    def from_xyz_strings(cls, generators: list[str]):
+    def from_xyz_strings(cls, base: list[str]):
         '''Construct Magnetic Space Group from a list of xyz_strings,
         that represent MSG operations.
         
@@ -424,7 +426,7 @@ class MSG(Group[mSymOp]):
            >>> 8 seconds for Ia-3d1' with 192 operations.
         2. MSGs with time reversal translations do not seem to work as expected
         '''
-        return cls(generators = [mSymOp.from_string(xyz_string) for xyz_string in generators])
+        return cls(base = [mSymOp.from_string(xyz_string) for xyz_string in base])
 
 
     def get_point_symmetry(self, position: np.ndarray[Any]) -> list[mSymOp]:

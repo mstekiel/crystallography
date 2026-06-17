@@ -12,7 +12,7 @@ import numpy as np
 from collections import deque, defaultdict
 from typing import Any, Callable, Dict, Generic, List, Tuple, TypeVar
 
-T = TypeVar('T', bound='SymOp')     # Holder for descendadts of SymOp
+T = TypeVar('T', bound='SymOp')     # Holder for descendants of SymOp
 A = TypeVar('A')                    # Holder for arbitrary objects to be symmetrized
 
 logger = logging.getLogger('Symmetry')
@@ -71,24 +71,29 @@ class Group(Generic[T]):
     _adjacency: Dict[T, List[Tuple[str, T]]]
     _index_of:  Dict[T, int]
 
-    def __init__(self, generators: list[T], name='Group'):
+    def __init__(self, base: list[T], name='Group'):
+        """Build the group from the list of base elements.
+
+        1. The `base` is sanitized by finding only unique elements and removing identiy.
+        2. The multiplication table is built, as well as adjacency graph and some other entities.
+        3. The group generators are taken from the adjacency of identity element.
+        """
 
         # Name
         self._name = name
 
-        # Capture identity before stripping so type is always available
-        identity = generators[0].identity()
-        generators = set(generators) - {identity}
-        self._generators = tuple(generators)
-
         # Generate few attributes of the group that can be done in single loop
         # and thus enhances the speed and clarity.
-        (operations, mult_table, adjacency, index_of) = self.build_group_cayley(generators=self._generators, identity=identity)
-
+        (operations, mult_table, adjacency, index_of) = self.build_group_cayley(base=base)
         self._operations = operations
         self._mult_table = mult_table
         self._adjacency  = adjacency
         self._index_of   = index_of
+
+        # Take generators as elements adjacent to identity in the adj. graph
+        identity = base[0].identity()
+        gens = [g for edge, g in adjacency[identity]]
+        self._generators = tuple(gens)
 
         # dict[label] -> n*n numpy arrays
         mats = self.adjacency_tensor(self._generators, self._operations, self._adjacency)
@@ -201,15 +206,21 @@ class Group(Generic[T]):
         return objs_unique
 
     @staticmethod
-    def build_group_cayley(generators: tuple[T], identity: T) -> tuple:
+    def build_group_cayley(base: list[T]
+                           ) -> tuple[list[T], 
+                                      Dict[tuple[T,T], T], 
+                                      Dict[T, list[tuple[T,T]]], 
+                                      Dict[T, int]
+                                      ]:
         """
-        Generate the group from generators using a Cayley-graph Breadth-First Search algorithm BFS,
+        Generate the group from base elements using a Cayley-graph Breadth-First Search algorithm BFS,
         build the full multiplication table, and construct the Cayley graph.
 
         Parameters
         ----------
-        generators: tuple[T]
-            List of group generators (identity NOT included)
+        base: tuple[T]
+            List of base elements of the group, multiplication of which
+            will form the full group.
         identity: T
             Identity element of the group
 
@@ -221,12 +232,13 @@ class Group(Generic[T]):
         - adjacency  : dict u -> list of (edge_label, v) for each generator/inverse
         - index_of   : map operation -> index to address rows/cols of the table
         """
-        gens_inv = tuple([g.inv() for g in generators])
+        identity = base[0].identity()
+
+        gens_inv = [g.inv() for g in base]
         
         # use Spm as the generating set for BFS
-        steps_bfs = set(generators + gens_inv) - {identity}
-        steps_adj = set(generators) - {identity}
-
+        steps_bfs = set(base + gens_inv) - {identity}
+        steps_adj = set(base) - {identity}
 
         # Degenerate case: only the identity exists
         if not steps_bfs:
@@ -235,18 +247,17 @@ class Group(Generic[T]):
             adj = defaultdict(list)
             return (elements, table, adj, {identity: 0})
     
-
-        # --- BFS discovery over the Cayley graph ---
-        discovered = {identity}
-        operations = [identity]
-        index_of = {identity: 0}
+        # BFS discovery over the Cayley graph
+        discovered: set[T]  = {identity}
+        operations: list[T] = [identity]
+        index_of: Dict[T, int] = {identity: 0}
         q = deque([identity])
 
         # Cayley graph (directed, edge-labeled)
-        adjacency = defaultdict(list)
+        adjacency: Dict[T, list[tuple[T,T]]] = defaultdict(list)
 
         # Full multiplication table, filled incrementally
-        mult_table = {}
+        mult_table: Dict[tuple[T,T], T] = {}
         mult_table[(identity, identity)] = identity*identity
 
         # Helper: when a new element y is discovered, fill its row/column vs all known elements
