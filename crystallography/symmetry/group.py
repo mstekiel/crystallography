@@ -5,12 +5,13 @@ which allows for certain simplifications and forces conventions.
 For example, I call the group elements operations, more natural in crystallography.
 Also, each element has its inverse.
 '''
-
-from abc import ABC, abstractmethod
-import logging
 import numpy as np
 from collections import deque, defaultdict
-from typing import Any, Iterable, Callable, Dict, Generic, List, Tuple, TypeVar
+
+import logging
+
+from abc import ABC, abstractmethod
+from typing import Any, Self, Iterable, Callable, Dict, Generic, List, Tuple, TypeVar
 
 T = TypeVar('T', bound='SymOp')     # Holder for descendants of SymOp
 A = TypeVar('A')                    # Holder for arbitrary objects to be symmetrized
@@ -23,27 +24,83 @@ class SymOp(ABC):
     '''Abstract class of symmetry operations as members of the crystallographic (SG) and magnetic space groups (MSG).
     Enforces to contain the implementation of functions required to form a SG or MSG:
     - multiplication: `__mul__`
-    - string casting for hash: `to_string()`
+    - string casting: `to_string()`, `from_string()`
     - inverse element: `inv`
     - identity element: `identity`
-
-    Notes
-    -----
-    Hashing with string might be a trap. Need to ensure it is a unique representation.
+    - hashing and equality: `__hash__`, `__eq__`
     '''
-
-    @abstractmethod
-    def __mul__(self, other: 'SymOp') -> 'SymOp': ...
-
-    @abstractmethod
-    def to_string(self) -> str: ...
-
-    @abstractmethod
-    def inv(self) -> 'SymOp': ...
 
     @classmethod
     @abstractmethod
-    def identity() -> 'SymOp': ...
+    def from_string(cls, xyz_str: str) -> 'Self':
+        '''Construct a symmetry operation from an xyz string.
+
+        Contract
+        --------
+        - Must be the inverse of ``to_string()``: ``cls.from_string(op.to_string()) == op``.
+        - Must use ``cls(...)`` so subclass identity is preserved.
+        '''
+
+    @abstractmethod
+    def to_string(self) -> str:
+        '''Serialize the operation to an xyz string.
+
+        Contract
+        --------
+        - Must round-trip with ``from_string()``: ``cls.from_string(op.to_string()) == op``.
+        - Must be a unique representation suitable for hashing and equality checks.
+        '''
+
+    @abstractmethod
+    def __mul__(self, other: 'Self') -> 'Self':
+        '''Compose two symmetry operations.
+
+        Contract
+        --------
+        - Apply ``other`` first, then ``self`` (standard left-to-right composition).
+        - Return ``self.__class__(...)``, not a hardcoded class name.
+        '''
+
+    @abstractmethod
+    def inv(self) -> 'Self':
+        '''Compute the inverse of this symmetry operation.
+
+        Contract
+        --------
+        - Return ``self.__class__(...)``, not a hardcoded class name.
+        - Must satisfy ``op * op.inv() == op.identity()``.
+        '''
+
+    @classmethod
+    @abstractmethod
+    def identity(cls) -> 'Self':
+        '''Return the identity element of this symmetry operation class.
+
+        Contract
+        --------
+        - Must use ``cls(...)`` so subclass identity is preserved.
+        - Must satisfy ``op * op.identity() == op`` for all ``op``.
+        '''
+
+    @abstractmethod
+    def __hash__(self) -> int:
+        '''Hash of the symmetry operation.
+
+        Contract
+        --------
+        - Must be consistent with ``__eq__``: ``a == b`` implies ``hash(a) == hash(b)``.
+        - Base on raw internal numerical representation components (matrix ,trnaslation, ...).
+        '''
+
+    @abstractmethod
+    def __eq__(self, other: object) -> bool:
+        '''Equality of two symmetry operations.
+
+        Contract
+        --------
+        - Must compare the same raw components as ``__hash__``.
+        - Return ``NotImplemented`` if ``other`` is not the same class.
+        '''
 
 
 class Group(Generic[T]):
