@@ -6,8 +6,8 @@ import numpy as np
 from fractions import Fraction
 import pytest
 
-from bragg import Crystal, MSG, Atom
-from bragg.utils.linalg import DMI
+from crystallography import Crystal, MSG, Atom
+from crystallography.utils.linalg import DMI
 
 
 class _CouplingStub:

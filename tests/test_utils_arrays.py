@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from bragg.utils.arrays import create_mesh
+from crystallography.utils.arrays import create_mesh
 
 
 def test_create_mesh_doctest():

@@ -6,7 +6,7 @@ import numpy as np
 from fractions import Fraction
 import pytest
 
-import bragg.utils.linalg as sw_linalg
+import crystallography.utils.linalg as sw_linalg
 
 def test_main_rotations():
     """Test principal rotations"""

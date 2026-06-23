@@ -2,7 +2,7 @@
 Classes and functions related to symmetry operations and groups.
 
 TODO:
-- [ ] Make MSG and SG inherit from Group and implement the necessary methods.
+- [x] Make MSG and SG inherit from Group and implement the necessary methods.
 - [ ] https://onlinelibrary.wiley.com/doi/10.1002/qua.20747 for implementation of:
     - [ ] Wyckoff positions
     - [ ] subgroups

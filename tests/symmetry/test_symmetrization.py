@@ -3,7 +3,7 @@
 # --------------------------
 import pytest
 
-from bragg.symmetry import Group
+from crystallography.symmetry import Group
 
 from .import make_perm_symop
 

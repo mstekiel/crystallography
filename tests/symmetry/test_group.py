@@ -1,7 +1,7 @@
 import pytest
 
-from bragg.symmetry.crystall_space_group import cSymOp, SG
-from bragg.symmetry.group import Group
+from crystallography.symmetry.crystall_space_group import cSymOp, SG
+from crystallography.symmetry.group import Group
 
 import numpy as np
 
@@ -223,7 +223,7 @@ def test_plotting():
             # 'y,z,x',
     ])
     print(sg)
-    from bragg.symmetry.group import plot_network
+    from crystallography.symmetry.group import plot_network
         
     plot_network(sg, layout='kamada_kawai', seed=10, node_size=200, font_size=8)
 

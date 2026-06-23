@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from bragg.databases import atom_data, isotope_data, magion_data, xrayion_data
-from bragg.databases.database import Database
+from crystallography.databases import atom_data, isotope_data, magion_data, xrayion_data
+from crystallography.databases.database import Database
 
 
 # ---------------------------------------------------------------------------

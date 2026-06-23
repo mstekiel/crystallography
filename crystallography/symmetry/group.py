@@ -10,8 +10,7 @@ from abc import ABC, abstractmethod
 import logging
 import numpy as np
 from collections import deque, defaultdict
-from typing import Any, Iterable, Sequence, Callable, Dict, Generic, List, Tuple, TypeVar, Self
-from copy import deepcopy
+from typing import Any, Iterable, Callable, Dict, Generic, List, Tuple, TypeVar
 
 T = TypeVar('T', bound='SymOp')     # Holder for descendants of SymOp
 A = TypeVar('A')                    # Holder for arbitrary objects to be symmetrized
@@ -25,8 +24,8 @@ class SymOp(ABC):
     Enforces to contain the implementation of functions required to form a SG or MSG:
     - multiplication: `__mul__`
     - string casting for hash: `to_string()`
-    - identity element: `identity`
     - inverse element: `inv`
+    - identity element: `identity`
 
     Notes
     -----
@@ -39,12 +38,13 @@ class SymOp(ABC):
     @abstractmethod
     def to_string(self) -> str: ...
 
+    @abstractmethod
+    def inv(self) -> 'SymOp': ...
+
     @classmethod
     @abstractmethod
     def identity() -> 'SymOp': ...
 
-    @abstractmethod
-    def inv(self) -> 'SymOp': ...
 
 class Group(Generic[T]):
     '''Represent group, holder of group elemets `g` with functionalities.
