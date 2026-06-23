@@ -1,4 +1,10 @@
-# spinwaves - SpinW implmentation in python
+# Crystallography
+
+# License
+Please cite:
+https://github.com/mstekiel/crystallography
+
+# DEV
 
 ## Bugs
 
@@ -77,4 +83,3 @@ uvx nox -f tests/noxfile.py -s version_matrix
 
 ## General notes
 - I tried to follow the structure of https://github.com/pypa/sampleproject for the development of this project. Following descriptions from https://python-packaging-tutorial.readthedocs.io/en/latest/setup_py.html
-- Tobi confirmed the factor of two is missing from single-ion naisotropies. He also mentioned the inverted sign mistake in the phase factor somewhere in the spin-spin correlation function calculations.
