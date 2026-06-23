@@ -5,6 +5,7 @@ import logging
 # from copy import deepcopy
 # from itertools import chain, combinations
 
+from ..utils.arrays import ensure_shape
 from .group import SymOp, Group
 
 
@@ -52,7 +53,12 @@ class cSymOp(SymOp):
 
     ##############################################################################
     # Constructors
-    def __init__(self, matrix: np.ndarray[int], translation: np.ndarray[Fraction]):
+    @ensure_shape(matrix=(3,3), translation=(3,))
+    def __init__(self, 
+                 matrix: np.ndarray[int], 
+                 translation: np.ndarray[Fraction]
+                 ):
+        '''Dumb init with validations only'''
 
         # Matrix elements can only be [-1, 0, 1]
         if not set(matrix.flatten()).issubset({-1,0,1}):
@@ -112,8 +118,8 @@ class cSymOp(SymOp):
         new_matrix = self._matrix @ other._matrix
         new_translation = (self._translation + self._matrix @ other._translation) % 1
 
-        return cSymOp(matrix = new_matrix, 
-                      translation = new_translation)
+        return self.__class__(matrix=new_matrix,
+                              translation=new_translation)
     
     def to_string(self) -> str:
         '''Represent symmetry operation as xyz string.
@@ -172,13 +178,14 @@ class cSymOp(SymOp):
         '''Identity element of the `cSymOp` class.'''
         return cls.from_string(xyz_str='x,y,z')
     
-    def inv(self) ->'cSymOp':
+    def inv(self) -> 'cSymOp':
         '''Inverse of the symmetry operation.'''
         gm_inv = np.linalg.inv(self._matrix).astype(int)
         gtr_new = np.array([Fraction(x).limit_denominator(6) % 1
                            for x in -gm_inv @ self._translation],
                            dtype=Fraction)
-        return cSymOp(matrix = gm_inv,translation = gtr_new)
+        
+        return self.__class__(matrix=gm_inv, translation=gtr_new)
 
     
     ##############################################################################

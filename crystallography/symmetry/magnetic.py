@@ -185,6 +185,16 @@ class mSymOp(SymOp):
             tuple(self._translation),
             self._time_reversal
         ))
+    
+    def __eq__(self, other: object) -> bool:
+        '''Equality based on hashed matrix, translation and time reversal.'''
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        # t1 = (self._matrix==other._matrix).all()
+        # t2 = (self._translation==other._translation).all()
+        # t3 = (self._time_reversal==other._time_reversal)
+        # return t1 and t2 and t3
+        return hash(self) == hash(other)
 
     @classmethod
     def identity(cls) -> 'mSymOp':
@@ -284,15 +294,6 @@ class mSymOp(SymOp):
 
         return ret
     
-    def __eq__(self, other: object) -> bool:
-        '''Equality based on hashed matrix, translation and time reversal.'''
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        # t1 = (self._matrix==other._matrix).all()
-        # t2 = (self._translation==other._translation).all()
-        # t3 = (self._time_reversal==other._time_reversal)
-        # return t1 and t2 and t3
-        return hash(self) == hash(other)
 
     def __mul__(self, other: 'mSymOp') -> 'mSymOp':
         # self is LHS, other is RHS operation

@@ -1,6 +1,6 @@
 from .crystal.atom import Atom
 from .crystal.crystal import Crystal
-from .symmetry.magnetic_symmetry import MSG, mSymOp
+from .symmetry.magnetic import MSG, mSymOp
 
 
 # setup_logging

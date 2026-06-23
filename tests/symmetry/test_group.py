@@ -1,6 +1,6 @@
 import pytest
 
-from crystallography.symmetry.crystall_space_group import cSymOp, SG
+from crystallography.symmetry.spatial import cSymOp, SG
 from crystallography.symmetry.group import Group
 
 import numpy as np

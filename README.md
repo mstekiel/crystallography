@@ -1,5 +1,72 @@
 # Crystallography
 
+Python implementation of fundamental concepts in crystallography.
+Designed to be a module for various other projects.
+
+## What this library does
+
+Its main functionality is to define Crystal = Lattice + SpaceGroup + Atoms
+and investigate their properties, while taking symmetry constraints very seriously. 
+It implements symmetry operations, space groups and magnetic space groups as well as atoms and lattices.
+
+
+## Module map
+
+```
+bragg/
+├── crystal/
+│   ├── atom.py          # Atom: position, moment, spin, g-tensor
+│   ├── lattice.py       # Lattice, LatticeOriented: coordinate transforms
+│   └── crystal.py       # Crystal(Lattice): atoms + MSG, generates full unit cell
+├── symmetry/
+│   ├── group.py             # SymOp (ABC), Group[T] (generic, Cayley BFS)
+│   ├── magnetic_symmetry.py # mSymOp(SymOp), MSG(Group[mSymOp])
+│   └── crystall_space_group.py  # cSymOp(SymOp), SG(Group[cSymOp])
+├── plotting/
+│   ├── supercell_plotter.py     # SupercellPlotter (ABC): balls, lines, arrows, ellipsoids
+│   ├── supercell_plotter_mpl.py # MPLSupercellPlotter: matplotlib backend
+│   └── crystal_plotter_mixin.py # CrystalPlotterMixin: stub for Crystal plotting methods
+├── databases/
+│   ├── database.py          # db_entry (ABC), Database, load_database_from_txt
+│   ├── implement_txt.py     # atom_data, isotope_data, color_data, magion_data, xrayion_data
+│   └── implement_spglib.py  # SG_entry, MSG_entry (TODO: complete spglib integration)
+├── utils/
+│   ├── linalg.py            # Rotation matrices, DMI, dipolar, vector ops
+│   └── arrays.py            # @ensure_shape decorator, create_mesh
+└── data_tables/             # Raw database text files
+    ├── atom.dat, isotope.dat, magion.dat, color.dat, xrayion.dat
+    ├── spglib_SGnames.dat, spglib_MSGnames.dat
+    └── SG_generators.txt    # TODO: generate from spglib; MSG_generators.txt planned
+```
+
+
+## Core class hierarchy
+
+```
+SymOp (ABC)  <- symmetry/group.py
+├── cSymOp   <- symmetry/crystall_space_group.py  (matrix + translation)
+└── mSymOp   <- symmetry/magnetic_symmetry.py     (matrix + translation + time_reversal)
+
+Group[T: SymOp]  <- symmetry/group.py  (generic, Cayley-BFS construction)
+├── SG   = Group[cSymOp]   <- crystall_space_group.py
+└── MSG  = Group[mSymOp]   <- magnetic_symmetry.py
+
+Lattice              <- crystal/lattice.py
+└── LatticeOriented  <- crystal/lattice.py  (Lattice + orientation matrix U)
+
+Crystal(Lattice)     <- crystal/crystal.py  (atoms + MSG)
+
+SupercellPlotter (ABC)       <- plotting/supercell_plotter.py
+└── MPLSupercellPlotter      <- plotting/supercell_plotter_mpl.py
+
+db_entry (ABC, dataclass)  <- databases/database.py
+└── atom_entry, isotope_entry, magion_entry, color_entry, xrayion_entry  <- implement_txt.py
+└── SG_entry, MSG_entry    <- implement_spglib.py (TODO: complete)
+
+Database  <- databases/database.py
+```
+
+
 # License
 Please cite:
 https://github.com/mstekiel/crystallography
@@ -79,6 +146,23 @@ uv run pytest --cov=bragg --cov-report=term-missing --cov-fail-under=80
 uvx nox -f tests/noxfile.py -s version_matrix
 ```
 
+## Test structure
+
+Tests mirror the bragg library file structure:
+
+```
+tests/
+├── test_crystal.py              # Crystal construction, atom indexing, DMI validation
+├── test_linalg.py               # Rotation matrices (Rx/Ry/Rz), RtoZ, Rodrigues
+├── test_utils_arrays.py         # create_mesh, ensure_shape
+├── symmetry/
+│   ├── __init__.py              # make_perm_symop(n) factory + S3/C4 generators
+│   ├── test_group.py            # Group axioms, Cayley graph, known orders
+│   ├── test_magnetic_symmetry.py
+│   └── test_symmetrization.py
+└── databases/
+    └── test_txt_databases.py    # All 5 txt databases: types, values, search, iteration
+```
 
 
 ## General notes

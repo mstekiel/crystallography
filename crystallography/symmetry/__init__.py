@@ -11,5 +11,5 @@ TODO:
 '''
 
 from .group import Group
-from .crystall_space_group import cSymOp, SG
-from .magnetic_symmetry import mSymOp, MSG
+from .spatial import cSymOp, SG
+from .magnetic import mSymOp, MSG
