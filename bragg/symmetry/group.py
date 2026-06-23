@@ -10,7 +10,8 @@ from abc import ABC, abstractmethod
 import logging
 import numpy as np
 from collections import deque, defaultdict
-from typing import Any, Callable, Dict, Generic, List, Tuple, TypeVar
+from typing import Any, Iterable, Sequence, Callable, Dict, Generic, List, Tuple, TypeVar, Self
+from copy import deepcopy
 
 T = TypeVar('T', bound='SymOp')     # Holder for descendants of SymOp
 A = TypeVar('A')                    # Holder for arbitrary objects to be symmetrized
@@ -50,14 +51,16 @@ class Group(Generic[T]):
     
     Attributes
     ----------
+    #TODO
     operations: list[g]
         List of elements that make the group
     index_of: Dict[g, int])
         Gives the internal index (integer) which corresponds to the operation.
     mult_table: Dict[Tuple[g, g], g]
         Dictionary that holds the multiplication table of the group.
-    adjacency: Dict[g, List[Tuple[str, g]]]
-        Adjacency graph of the group. `adjacency[g1]=(str(g2), g3)`, where g2*g1=g3. Uses string representation of the `g2` operation.
+    adjacency: Dict[g, List[Tuple[g, g]]]
+        Adjacency graph of the group. `adjacency[g1]=(g2, g3)`, where g1*g2=g3, 
+        so `g2` is the label and `g3` is neighbouring vertex.
     adjacency_matrix: 
     
     TODO
@@ -66,7 +69,7 @@ class Group(Generic[T]):
     '''
     _name: str
     _generators: tuple[T]
-    _operations: list[T]
+    _operations: tuple[T]
     _mult_table: Dict[Tuple[T, T], T]
     _adjacency: Dict[T, List[Tuple[str, T]]]
     _index_of:  Dict[T, int]
@@ -138,7 +141,7 @@ class Group(Generic[T]):
     
     ##########################################################################################################
     # Advanced methods
-    def symmetrize(self, obj: A, transform_func: Callable[[T], T], check_attrs: list[str]=[]) -> list[T]:
+    def symmetrize(self, obj: A, transform_func: Callable[[T,A], A], check_attrs: list[str]=[]) -> list[T]:
         '''Symmetrize the `object` of arbitrary type according to the `transform_func`
         within the symmetry of the `Group`.
         In other words, will apply each symmetry operation of the `Group` to the `object`,
@@ -205,9 +208,60 @@ class Group(Generic[T]):
 
         return objs_unique
 
+    def close_subset(self, base: list[T]) -> list[T]:
+        """Generate a subgroup of `self` by closing the symmetry
+         elements from `base` list.
+         
+         Uses the internal multiplication table for speed,
+         thus can close only subgroups of self.
+
+         Parameters
+         ----------
+         base: list[T]
+            List of symmetry operations.
+         """
+        # DEV: this algorithm is basicaly snippet from the 
+        # self.build_group_cayley
+
+        assert set(base) <= set(self._operations)   # `base` operations must be subset of the group
+
+        identity = base[0].identity()
+        gens_inv = [g.inv() for g in base]
+        
+        # use Spm as the generating set for BFS
+        steps_bfs = set(base + gens_inv) - {identity}
+
+        # Degenerate case: only the identity exists
+        if not steps_bfs:
+            return [identity]
+    
+        # BFS discovery over the Cayley graph
+        discovered: set[T]  = {identity}
+        operations: list[T] = [identity]
+        q = deque([identity])
+
+        while q:
+            if len(operations) > MAX_GROUP_ORDER:
+                raise ValueError("Group appears larger than max_size (possible infinite subgroup).")
+
+            x = q.popleft()
+            for s in steps_bfs:
+                # should it be LH or RH multiplicatoin?
+                # y = x*s
+                y = self._mult_table[(x, s)]
+
+                # if new vertex, register and extend BFS frontier
+                if y not in discovered:
+                    discovered.add(y)
+                    operations.append(y)
+                    q.append(y)
+
+
+        return operations
+              
     @staticmethod
     def build_group_cayley(base: list[T]
-                           ) -> tuple[list[T], 
+                           ) -> tuple[tuple[T], 
                                       Dict[tuple[T,T], T], 
                                       Dict[T, list[tuple[T,T]]], 
                                       Dict[T, int]
@@ -221,8 +275,6 @@ class Group(Generic[T]):
         base: tuple[T]
             List of base elements of the group, multiplication of which
             will form the full group.
-        identity: T
-            Identity element of the group
 
         Returns
         -------
@@ -291,6 +343,7 @@ class Group(Generic[T]):
                     q.append(y)
 
 
+        operations = tuple(operations)
         return (operations, mult_table, adjacency, index_of)
     
     @staticmethod
@@ -332,6 +385,72 @@ class Group(Generic[T]):
                     mats[gc][idx[g1],idx[g2]] += 1
 
         return mats
+    
+    def get_subgroups(self, contains: Iterable[T] = None):
+        """Find all subgroups of space group, by creating cyclic subgroups
+        of all group operations and then extending them with leftover operations."""  
+
+        # set needs to be freezed to allow hashing it
+        cyclic_subgroups = set(frozenset(self.close_subset([g])) 
+                               for g in self.operations)
+        
+        # TODO here filter only those cyclic cubgroups 
+        # that contain the required symmetry element
+        if contains is None:
+            subgroups = cyclic_subgroups
+        else:
+            subgroups = set(G for G in cyclic_subgroups if set(contains) <= G)
+
+
+        logger.debug(subgroups)
+
+        n = self.order
+        q = list(subgroups) # creates a safe copy
+        while q:
+            H = q.pop()
+            if len(H) == n:
+                continue
+
+            # Record which elements were already covered in extension,
+            # to avoid rediscovery
+            covered = set(H)
+            for g in self.operations:
+                if g in covered:
+                    continue
+
+                new_gens = list(H | {g})
+                K = frozenset(self.close_subset(new_gens))
+
+                # Add extended group to the covere elements set
+                covered |= K
+                if K not in subgroups:
+                    subgroups.add(K)
+                    q.append(K)
+
+        ### TODO Return
+        # Right now, the group constructor creates multiplication
+        # table from scratch, which is relatively slow.
+        # For now, keep returning just set of symops
+        # but i nthe future, the constructor should allow setting all
+        # internal fields.
+
+        # 1.
+        return sorted(subgroups, key=len)
+
+        # 2. TODO
+        # s = []
+        # for H in subgroups:
+        #     print("New group from: ", H)
+        #     new_H = deepcopy(self)
+        #     new_H.__init__(base=list(new_H), name=self._name+"_sub")
+        #     s.append(new_H)
+
+
+        # return s
+        # return [self.__init__(base=list(Gi), name=f"self._name}_sub{n}")
+        #         for n,Gi in enumerate(subgroups)]
+    
+
 
 
 

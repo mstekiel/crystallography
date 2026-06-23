@@ -95,8 +95,6 @@ class Crystal(Lattice):
 
         self._atoms_unique = tuple(atoms)
 
-        # TODO atom that lives in a crystal has to have its symmetry operations saved
-
         def transform_atom(g: 'mSymOp', a: 'Atom'):
             atom_new = deepcopy(a)
 
@@ -151,6 +149,14 @@ class Crystal(Lattice):
     
     ################################################################################
     # Functionalities
+
+    def find_SSG(self):
+        """Find the spin space group of the crystal. 
+        
+        This takes all magnetic atoms of the structure
+        and finds the spin symmetry operations that leave it invariant,
+        according to symmetry operations of the spin space group."""
+        pass
 
     def get_atomic_distances(self, dmax: float=8, dmin: float=-1):
         '''Make a list of interatomic distances in the range `dmin < d < dmax`.
@@ -238,6 +244,8 @@ class Crystal(Lattice):
         This gives different results from the symmetrization by all symmetry elements.
         Talk with Piotr.
         '''
+        # TODO this does not belong here. Should be a property of coupling, or add on function
+        # is_respectful_DMI(cc: Coupling, cr: Crystal)
 
         bond_midpoint = (self.atoms_magnetic[coupling.id1].r + 
                          self.atoms_magnetic[coupling.id2].r + coupling.n_uvw) / 2
@@ -256,7 +264,6 @@ class Crystal(Lattice):
             ret = ret[0]
 
         return ret
-
 
     def represent_tensor(self, atom: 'Atom', tensor='aniso'):
         '''
