@@ -64,10 +64,10 @@ Full testing
 uv run pytest
  
 # generate htmlcov/ report, open htmlcov/index.html
-uv run pytest tests/ --cov=bragg --cov-report=html
+uv run pytest --cov=bragg --cov-report=html
 
 # generate htmlcov/ report, open htmlcov/index.html
-uv run pytest tests/ --cov=bragg --cov-report=term-missing --cov-fail-under=80
+uv run pytest --cov=bragg --cov-report=term-missing --cov-fail-under=80
 
 # full matrix — slow, run deliberately
 uvx nox -f tests/noxfile.py -s version_matrix
